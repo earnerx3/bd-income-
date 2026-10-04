@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Login & Sign Up - BD INCOME</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts: Hind Siliguri & Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Hind Siliguri"', '"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Plus Jakarta Sans"', 'monospace']
+          },
+          colors: {
+            brandGreen: '#059669',
+            brandGreenLight: '#10B981',
+            brandMint: '#34D399',
+            brandBlack: '#0F172A',
+            brandBg: '#F8FAF9'
+          },
+          boxShadow: {
+            'card': '0 6px 20px rgba(16, 185, 129, 0.08)',
+            'btn-emerald': '0 8px 24px -4px rgba(5, 150, 105, 0.42)',
+            'btn-black': '0 8px 22px -4px rgba(15, 23, 42, 0.35)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0d1520;
+      color: #1E293B;
+      font-family: 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; }
+
+    /* বাটন ক্লিক বাউন্স ইফেক্ট */
+    .btn-press {
+      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s ease;
+    }
+    .btn-press:active {
+      transform: scale(0.97);
+      filter: brightness(0.96);
+    }
+
+    /* লোগো ও হেডার গ্লাস শিমার */
+    .logo-badge {
+      background: linear-gradient(135deg, #047857 0%, #059669 50%, #10B981 100%);
+      box-shadow: 0 10px 25px -4px rgba(5, 150, 105, 0.35);
+    }
+  </style>
+</head>
+
+<body class="flex justify-center min-h-screen bg-slate-900/10">
+
+  <!-- ==============================================================
+       মোবাইল ফ্রেম কন্টেইনার (ম্যাক্স ৪৩০px, উজ্জ্বল ও ফ্রেশ লাইট ব্যাকগ্রাউন্ড)
+  ================================================================== -->
+  <div id="auth-container" class="w-full max-w-[430px] min-h-screen relative bg-[#F8FAF9] shadow-2xl flex flex-col justify-between p-6 border-x border-slate-200">
+
+    <!-- শীর্ষ অংশ: লোগো ও ব্র্যান্ডিং -->
+    <div class="space-y-6 pt-4">
+      
+      <!-- টপ লোগো ও হেডলাইন -->
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 logo-badge rounded-3xl mx-auto flex items-center justify-center text-white text-3xl shadow-lg">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-black text-[#0F172A] tracking-tight">
+            BD <span class="text-brandGreen">INCOME</span>
+          </h1>
+          <p class="text-xs text-gray-500 font-bold mt-0.5">বিশ্বস্ত ও সহজ আর্নিং প্ল্যাটফর্ম</p>
+        </div>
+      </div>
+
+      <!-- লগইন / রেজিস্ট্রেশন ট্যাব সুইচ -->
+      <div class="bg-white p-1 rounded-2xl border border-emerald-100 shadow-sm flex items-center">
+        <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-3 rounded-xl font-black text-xs sm:text-sm bg-brandGreen text-white shadow-btn-emerald transition-all duration-200 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-right-to-bracket text-xs"></i>
+          <span>লগইন</span>
+        </button>
+        <button id="tab-register" onclick="switchAuthTab('register')" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-all duration-200 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-user-plus text-xs"></i>
+          <span>নতুন একাউন্ট</span>
+        </button>
+      </div>
+
+      <!-- ইনপুট ফর্ম কার্ড (ঝকঝকে সাদা কার্ড) -->
+      <div class="bg-white rounded-3xl p-6 shadow-card border border-emerald-100 space-y-4">
+
+        <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-3.5">
+          
+          <!-- নাম ইনপুট (শুধুমাত্র রেজিস্ট্রেশনে দেখাবে) -->
+          <div id="field-name" class="space-y-1 hidden">
+            <label class="block text-xs font-black text-[#0F172A]">আপনার পূর্ণ নাম</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                <i class="fa-regular fa-user"></i>
+              </span>
+              <input 
+                type="text" 
+                id="auth-name" 
+                placeholder="যেমন: নাহিদুল ইসলাম" 
+                class="w-full h-12 bg-[#F8FAF9] border border-gray-200 focus:border-brandGreen focus:bg-white rounded-xl pl-10 pr-4 text-xs sm:text-sm font-bold text-gray-900 outline-none transition"
+              >
+            </div>
+          </div>
+
+          <!-- ইমেইল ইনপুট -->
+          <div class="space-y-1">
+            <label class="block text-xs font-black text-[#0F172A]">ইমেইল ঠিকানা</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                <i class="fa-regular fa-envelope"></i>
+              </span>
+              <input 
+                type="email" 
+                id="auth-email" 
+                required 
+                placeholder="example@mail.com" 
+                class="w-full h-12 bg-[#F8FAF9] border border-gray-200 focus:border-brandGreen focus:bg-white rounded-xl pl-10 pr-4 text-xs sm:text-sm font-bold font-mono text-gray-900 outline-none transition"
+              >
+            </div>
+          </div>
+
+          <!-- পাসওয়ার্ড ইনপুট -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-black text-[#0F172A]">পাসওয়ার্ড</label>
+              <button type="button" id="btn-forgot-pass" onclick="openForgotModal()" class="text-[11px] font-bold text-brandGreen hover:underline">
+                পাসওয়ার্ড ভুলে গেছেন?
+              </button>
+            </div>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                <i class="fa-solid fa-lock"></i>
+              </span>
+              <input 
+                type="password" 
+                id="auth-password" 
+                required 
+                placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড" 
+                class="w-full h-12 bg-[#F8FAF9] border border-gray-200 focus:border-brandGreen focus:bg-white rounded-xl pl-10 pr-11 text-xs sm:text-sm font-bold text-gray-900 outline-none transition"
+              >
+              <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-sm p-1">
+                <i id="password-eye-icon" class="fa-regular fa-eye-slash"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- রেফার কোড ইনপুট (শুধুমাত্র রেজিস্ট্রেশনে দেখাবে) -->
+          <div id="field-ref" class="space-y-1 hidden">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-black text-[#0F172A]">রেফারেল কোড (ঐচ্ছিক)</label>
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">বোনাস নিশ্চিত</span>
+            </div>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                <i class="fa-solid fa-gift"></i>
+              </span>
+              <input 
+                type="text" 
+                id="auth-ref" 
+                placeholder="রেফার কোড থাকলে দিন (যেমন: BD349460)" 
+                class="w-full h-12 bg-[#F8FAF9] border border-gray-200 focus:border-brandGreen focus:bg-white rounded-xl pl-10 pr-4 text-xs sm:text-sm font-black font-mono uppercase text-emerald-700 outline-none transition"
+              >
+            </div>
+          </div>
+
+          <!-- সাবমিট অ্যাকশন বাটন -->
+          <button 
+            type="submit" 
+            id="btn-auth-submit" 
+            class="w-full h-13 py-3.5 mt-2 bg-[#0F172A] hover:bg-[#1E293B] text-white font-black text-sm rounded-xl shadow-btn-black flex items-center justify-center gap-2 btn-press border border-slate-700 transition"
+          >
+            <span id="btn-submit-text">লগইন করুন</span>
+            <i class="fa-solid fa-arrow-right text-xs text-brandMint"></i>
+          </button>
+
+        </form>
+
+        <!-- এরর / স্ট্যাটাস মেসেজ বক্স -->
+        <div id="auth-alert" class="hidden p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+          <i id="auth-alert-icon" class="fa-solid fa-circle-exclamation text-sm"></i>
+          <span id="auth-alert-text">কোনো সমস্যা হয়েছে</span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ফুটার সিকিউরিটি ব্যাজ -->
+    <div class="pt-6 pb-2 text-center space-y-1">
+      <div class="inline-flex items-center gap-1.5 text-xs text-gray-500 font-bold">
+        <i class="fa-solid fa-shield-halved text-brandGreen"></i>
+        <span>100% Secure Firebase Encryption</span>
+      </div>
+      <p class="text-[11px] text-gray-400">© BD INCOME. সর্বস্বত্ব সংরক্ষিত।</p>
+    </div>
+
+  </div>
+
+  <!-- ==============================================================
+       পাসওয়ার্ড রিসেট মডাল (Forgot Password)
+  ================================================================== -->
+  <div id="modal-forgot" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-[250] hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-[350px] rounded-3xl p-5 space-y-4 shadow-2xl border border-emerald-100">
+      <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+        <h3 class="text-sm font-black text-gray-900 flex items-center gap-2">
+          <i class="fa-solid fa-key text-brandGreen"></i>
+          <span>পাসওয়ার্ড রিসেট করুন</span>
+        </h3>
+        <button onclick="closeForgotModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-600 font-medium leading-relaxed">
+        আপনার একাউন্টের ইমেইল ঠিকানাটি দিন। আমরা সেখানে পাসওয়ার্ড রিসেট করার একটি নিরাপদ লিংক পাঠিয়ে দেব।
+      </p>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">ইমেইল ঠিকানা</label>
+        <input 
+          type="email" 
+          id="forgot-email" 
+          placeholder="example@mail.com" 
+          class="w-full h-11 border border-gray-200 rounded-xl px-3 outline-none focus:border-brandGreen font-bold font-mono text-xs text-gray-800"
+        >
+      </div>
+
+      <button onclick="handlePasswordReset()" class="w-full h-11 bg-brandGreen text-white font-black text-xs rounded-xl shadow-btn-emerald btn-press">
+        রিসেট লিংক পাঠান
+      </button>
+    </div>
+  </div>
+
+  <!-- গ্লোবাল টোস্ট নোটিফিকেশন -->
+  <div id="app-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[300] transition-all duration-300 pointer-events-none opacity-0 -translate-y-8">
+    <div class="px-5 py-2.5 rounded-full bg-[#0F172A] text-white shadow-2xl flex items-center gap-2.5 text-xs whitespace-nowrap border border-emerald-500/30">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-brandMint"></i>
+      <span id="toast-msg" class="font-bold">সফল হয়েছে</span>
+    </div>
+  </div>
+
+  <!-- ==============================================================
+       ব্যাকএন্ড, ফায়ারবেস অথেন্টিকেশন ও সুপার রেজিস্ট্রেশন লজিক
+  ================================================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, onAuthStateChanged, signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getFirestore, doc, setDoc, getDoc, updateDoc, increment, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC5OCoerKEM5rkq28026Unzb9FmyAD9pg4",
+      authDomain: "vote-b35d7.firebaseapp.com",
+      projectId: "vote-b35d7",
+      storageBucket: "vote-b35d7.firebasestorage.app",
+      messagingSenderId: "904040944850",
+      appId: "1:904040944850:web:11523bc12c18dff2c0890b",
+      measurementId: "G-8EP040DZ01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentMode = 'login'; // 'login' অথবা 'register'
+
+    // ==============================================================
+    // ১. চেক করা ইউজার আগে থেকেই লগইন আছে কি না
+    // ==============================================================
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // অলরেডি লগইন করা থাকলে সরাসরি মূল ড্যাশবোর্ডে পাঠাবে
+        window.location.replace("index.html");
+      }
+    });
+
+    // ==============================================================
+    // ২. ইউআরএল থেকে স্বয়ংক্রিয় রেফারেল কোড রিড করা
+    // ==============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+      if (refCode) {
+        switchAuthTab('register');
+        document.getElementById('auth-ref').value = refCode.trim().toUpperCase();
+      }
+    });
+
+    // ==============================================================
+    // ৩. ট্যাব সুইচিং (লগইন ⮂ রেজিস্ট্রেশন)
+    // ==============================================================
+    window.switchAuthTab = function(mode) {
+      currentMode = mode;
+      hideAlert();
+
+      const tabLogin = document.getElementById('tab-login');
+      const tabRegister = document.getElementById('tab-register');
+      const fieldName = document.getElementById('field-name');
+      const fieldRef = document.getElementById('field-ref');
+      const btnForgot = document.getElementById('btn-forgot-pass');
+      const btnText = document.getElementById('btn-submit-text');
+
+      if (mode === 'login') {
+        tabLogin.className = "flex-1 py-3 rounded-xl font-black text-xs sm:text-sm bg-brandGreen text-white shadow-btn-emerald transition-all duration-200 flex items-center justify-center gap-1.5";
+        tabRegister.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-all duration-200 flex items-center justify-center gap-1.5";
+        
+        fieldName.classList.add('hidden');
+        fieldRef.classList.add('hidden');
+        btnForgot.classList.remove('hidden');
+        btnText.innerText = "লগইন করুন";
+      } else {
+        tabRegister.className = "flex-1 py-3 rounded-xl font-black text-xs sm:text-sm bg-brandGreen text-white shadow-btn-emerald transition-all duration-200 flex items-center justify-center gap-1.5";
+        tabLogin.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-all duration-200 flex items-center justify-center gap-1.5";
+        
+        fieldName.classList.remove('hidden');
+        fieldRef.classList.remove('hidden');
+        btnForgot.classList.add('hidden');
+        btnText.innerText = "একাউন্ট তৈরি করুন";
+      }
+    };
+
+    // ==============================================================
+    // ৪. পাসওয়ার্ড দেখা/লুকানো টগল
+    // ==============================================================
+    window.togglePasswordVisibility = function() {
+      const passInput = document.getElementById('auth-password');
+      const eyeIcon = document.getElementById('password-eye-icon');
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        eyeIcon.className = "fa-regular fa-eye text-brandGreen";
+      } else {
+        passInput.type = 'password';
+        eyeIcon.className = "fa-regular fa-eye-slash";
+      }
+    };
+
+    // ==============================================================
+    // ৫. লগইন ও রেজিস্ট্রেশন মূল সাবমিট লজিক
+    // ==============================================================
+    window.handleAuthSubmit = async function(e) {
+      e.preventDefault();
+      hideAlert();
+
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const btn = document.getElementById('btn-auth-submit');
+      const btnText = document.getElementById('btn-submit-text');
+
+      if (!email || !password) {
+        showAlert("দয়া করে ইমেইল ও পাসওয়ার্ড প্রদান করুন।", "error");
+        return;
+      }
+
+      // বাটন লোডিং স্টেট
+      btn.disabled = true;
+      btnText.innerText = "অপেক্ষা করুন...";
+
+      try {
+        if (currentMode === 'login') {
+          // --- লগইন ফ্লো ---
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          confetti({ particleCount: 40, spread: 60 });
+          showToast("লগইন সফল হয়েছে! ড্যাশবোর্ডে প্রবেশ হচ্ছে...");
+          
+          setTimeout(() => {
+            window.location.replace("index.html");
+          }, 1200);
+
+        } else {
+          // --- রেজিস্ট্রেশন ফ্লো ---
+          const name = document.getElementById('auth-name').value.trim();
+          const refCodeInput = document.getElementById('auth-ref').value.trim().toUpperCase();
+
+          if (!name) {
+            showAlert("দয়া করে আপনার পূর্ণ নাম লিখুন।", "error");
+            btn.disabled = false;
+            btnText.innerText = "একাউন্ট তৈরি করুন";
+            return;
+          }
+
+          if (password.length < 6) {
+            showAlert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।", "error");
+            btn.disabled = false;
+            btnText.innerText = "একাউন্ট তৈরি করুন";
+            return;
+          }
+
+          // ফায়ারবেস অথেন্টিকেশনে ইউজার তৈরি
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          // প্রোফাইল নাম সেট
+          await updateProfile(user, { displayName: name });
+
+          // ইউজারের জন্য ইউনিক রেফারেল কোড জেনারেট
+          const myReferralCode = "BD" + Math.floor(100000 + Math.random() * 900000);
+
+          // নতুন ইউজারের ফায়ারস্টোর ডকুমেন্ট তৈরি
+          const newUserDoc = {
+            uid: user.uid,
+            name: name,
+            email: email,
+            balance: 25.00, // ওয়েলকাম বোনাস
+            earnings: 25.00,
+            referrals: 0,
+            refIncome: 0.00,
+            refCode: myReferralCode,
+            referredBy: refCodeInput || "",
+            createdAt: serverTimestamp()
+          };
+
+          await setDoc(doc(db, "users", user.uid), newUserDoc);
+
+          // লোকাল ক্যাশ আপডেট
+          localStorage.setItem("bdincome_user", JSON.stringify(newUserDoc));
+
+          confetti({ particleCount: 50, spread: 70 });
+          showToast("একাউন্ট তৈরি সফল হয়েছে! ২৫ টাকা বোনাস যোগ হয়েছে।");
+
+          setTimeout(() => {
+            window.location.replace("index.html");
+          }, 1500);
+        }
+
+      } catch (err) {
+        btn.disabled = false;
+        btnText.innerText = currentMode === 'login' ? "লগইন করুন" : "একাউন্ট তৈরি করুন";
+        handleFirebaseError(err);
+      }
+    };
+
+    // ==============================================================
+    // ৬. ফায়ারবেস এরর মেসেজকে বাংলায় রূপান্তর
+    // ==============================================================
+    function handleFirebaseError(err) {
+      const code = err.code;
+      let msg = "কোনো একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।";
+
+      if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+        msg = "ভুল ইমেইল অথবা পাসওয়ার্ড দিয়েছেন!";
+      } else if (code === 'auth/email-already-in-use') {
+        msg = "এই ইমেইল দিয়ে আগেই একাউন্ট তৈরি করা আছে! লগইন করার চেষ্টা করুন।";
+      } else if (code === 'auth/invalid-email') {
+        msg = "সঠিক ইমেইল ঠিকানা প্রদান করুন!";
+      } else if (code === 'auth/weak-password') {
+        msg = "পাসওয়ার্ড খুবই দুর্বল! কমপক্ষে ৬ অক্ষর দিন।";
+      } else if (code === 'auth/network-request-failed') {
+        msg = "ইন্টারনেট সংযোগে সমস্যা হয়েছে! নেট চেক করুন।";
+      } else if (code === 'auth/too-many-requests') {
+        msg = "অতিরিক্ত ভুল চেষ্টার কারণে সাময়িকভাবে ব্লক করা হয়েছে। কিছুক্ষণ পর চেষ্টা করুন।";
+      }
+
+      showAlert(msg, "error");
+    }
+
+    // ==============================================================
+    // ৭. পাসওয়ার্ড রিসেট হ্যান্ডলার (Forgot Password)
+    // ==============================================================
+    window.openForgotModal = function() {
+      const currentEmail = document.getElementById('auth-email').value.trim();
+      if (currentEmail) document.getElementById('forgot-email').value = currentEmail;
+      document.getElementById('modal-forgot').classList.remove('hidden');
+    };
+
+    window.closeForgotModal = function() {
+      document.getElementById('modal-forgot').classList.add('hidden');
+    };
+
+    window.handlePasswordReset = async function() {
+      const email = document.getElementById('forgot-email').value.trim();
+      if (!email) {
+        showToast("দয়া করে ইমেইল ঠিকানা দিন!", "fa-triangle-exclamation");
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        closeForgotModal();
+        showToast("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে!");
+      } catch (err) {
+        showToast("লিংক পাঠাতে ব্যর্থ হয়েছে! ইমেইল সঠিক কি না দেখুন।", "fa-circle-xmark");
+      }
+    };
+
+    // অ্যালার্ট ও টোস্ট হেল্পার
+    function showAlert(text, type = "error") {
+      const box = document.getElementById('auth-alert');
+      const icon = document.getElementById('auth-alert-icon');
+      const msg = document.getElementById('auth-alert-text');
+
+      box.className = type === "error" 
+        ? "p-3 rounded-xl text-xs font-bold flex items-center gap-2 bg-rose-50 text-rose-700 border border-rose-200 block"
+        : "p-3 rounded-xl text-xs font-bold flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 block";
+
+      icon.className = type === "error" ? "fa-solid fa-circle-exclamation text-sm" : "fa-solid fa-circle-check text-sm";
+      msg.innerText = text;
+    }
+
+    function hideAlert() {
+      document.getElementById('auth-alert').classList.add('hidden');
+    }
+
+    let toastTimer = null;
+    window.showToast = function(msg, icon = 'fa-circle-check') {
+      const toast = document.getElementById('app-toast');
+      const msgEl = document.getElementById('toast-msg');
+      const iconEl = document.getElementById('toast-icon');
+      if (!toast) return;
+
+      msgEl.innerText = msg;
+      iconEl.className = `fa-solid ${icon} text-brandMint`;
+
+      clearTimeout(toastTimer);
+      toast.classList.remove('opacity-0', '-translate-y-8');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-8');
+      }, 2400);
+    };
+  </script>
+
+</body>
+</html>

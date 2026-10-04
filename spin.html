@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Spin & Win - BD INCOME</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts: Hind Siliguri & Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Hind Siliguri"', '"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Plus Jakarta Sans"', 'monospace']
+          },
+          colors: {
+            brandGreen: '#059669',
+            brandGreenLight: '#10B981',
+            brandMint: '#34D399',
+            brandBlack: '#0F172A',
+            brandBg: '#F8FAF9'
+          },
+          boxShadow: {
+            'card': '0 4px 18px rgba(16, 185, 129, 0.08)',
+            'btn-emerald': '0 10px 24px -4px rgba(5, 150, 105, 0.42)',
+            'btn-black': '0 10px 24px -4px rgba(15, 23, 42, 0.35)',
+            'popup': '0 12px 30px rgba(0, 0, 0, 0.1)',
+            'drawer': '0 2px 10px rgba(0, 0, 0, 0.05)',
+            'home-btn': '0 8px 22px rgba(5, 150, 105, 0.38)',
+            'wheel': '0 12px 32px rgba(5, 150, 105, 0.25)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0d1520;
+      color: #1E293B;
+      font-family: 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; }
+
+    /* বাটন ক্লিক বাউন্স ইফেক্ট */
+    .btn-press {
+      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s ease;
+    }
+    .btn-press:active {
+      transform: scale(0.96);
+      filter: brightness(0.96);
+    }
+
+    /* স্পিন হুইল স্মুথ রোটেশন ট্রানজিশন */
+    #spinCanvas {
+      transition: transform 4.5s cubic-bezier(0.15, 0.9, 0.2, 1);
+    }
+
+    /* লাইভ নোটিফিকেশন ট্রানজিশন */
+    .live-popup-transition {
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.35s ease-out;
+    }
+  </style>
+</head>
+
+<body class="flex justify-center min-h-screen bg-slate-900/10">
+
+  <!-- ==============================================================
+       মোবাইল ফ্রেম কন্টেইনার (০ মিলিসেকেন্ডে সরাসরি প্রদর্শিত হবে)
+  ================================================================== -->
+  <div id="app-container" class="w-full max-w-[430px] min-h-screen pb-28 relative bg-[#F8FAF9] shadow-2xl flex flex-col overflow-x-hidden border-x border-slate-200">
+
+    <!-- ১. ভাইব্রেন্ট এমারেল্ড ও ব্ল্যাক হেডার -->
+    <header class="bg-[#10B981] px-4 pt-4 pb-5 shadow-sm relative z-30">
+      <div class="flex items-center justify-between">
+        
+        <!-- হ্যামবার্গার ও গ্রিটিং -->
+        <div class="flex items-center gap-3">
+          <button onclick="openDrawerMenu()" class="w-10 h-10 rounded-2xl bg-white/20 text-[#0F172A] text-xl btn-press flex items-center justify-center border border-white/30 shadow-xs">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="leading-tight">
+            <h1 class="text-base sm:text-lg font-black text-[#0F172A] flex items-center gap-1.5 tracking-tight">
+              Hi, <span id="header-user-name">...</span>
+            </h1>
+            <p class="text-xs sm:text-sm font-bold text-emerald-950/80">Welcome to BD INCOME!</p>
+          </div>
+        </div>
+
+        <!-- নোটিফিকেশন বেল ও প্রোফাইল অ্যাভাটার -->
+        <div class="flex items-center gap-2.5">
+          <button onclick="showToast('কোনো নতুন নোটিফিকেশন নেই', 'fa-bell')" class="w-10 h-10 rounded-2xl bg-white/25 border border-white/30 flex items-center justify-center text-[#0F172A] text-base shadow-xs btn-press relative">
+            <i class="fa-solid fa-bell"></i>
+          </button>
+          
+          <a href="account.html" class="w-10 h-10 rounded-2xl border-2 border-white shadow-md overflow-hidden bg-white block btn-press flex-shrink-0">
+            <img id="header-avatar" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" class="w-full h-full object-cover">
+          </a>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- ২. স্পিন পেজ মেইন কন্টেন্ট এরিয়া -->
+    <main class="flex-1 px-4 pt-4 space-y-4 z-20">
+
+      <!-- ব্যালেন্স ও স্পিন লিমিট স্ট্যাটাস গ্রিড কার্ড -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-gradient-to-br from-emerald-700 via-brandGreen to-teal-600 rounded-3xl p-4 text-white shadow-btn-emerald text-center space-y-0.5">
+          <span class="text-[11px] font-bold text-emerald-100 uppercase tracking-wider">বর্তমান ব্যালেন্স</span>
+          <div class="text-xl sm:text-2xl font-black font-mono tracking-tight" id="spin-balance-display">৳ 0.00</div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-4 text-gray-900 shadow-card border border-emerald-100 text-center space-y-0.5">
+          <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">আজকের বাকি স্পিন</span>
+          <div class="text-xl sm:text-2xl font-black font-mono tracking-tight text-brandGreen" id="remaining-spins-display">৫ বার</div>
+        </div>
+      </div>
+
+      <!-- মূল লাকি স্পিন হুইল সেকশন (সাদা কার্ড, পরিষ্কার লাইট থিম) -->
+      <div class="bg-white rounded-3xl p-6 shadow-card border border-emerald-100 text-center space-y-4">
+        
+        <div>
+          <h2 class="text-base sm:text-lg font-black text-gray-900 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-dharmachakra text-brandGreen text-xl"></i>
+            <span>Lucky Spin & Win</span>
+          </h2>
+          <p class="text-xs text-gray-500 font-medium mt-0.5">চাকা ঘুরিয়ে জিতে নিন নিশ্চিত ফ্রি বোনাস টাকা!</p>
+        </div>
+
+        <!-- হুইল ও পয়েন্টার কন্টেইনার -->
+        <div class="relative w-[260px] h-[260px] mx-auto flex items-center justify-center my-2">
+          <!-- ক্যানভাস হুইল -->
+          <canvas id="spinCanvas" width="260" height="260" class="rounded-full shadow-wheel border-4 border-white"></canvas>
+
+          <!-- শীর্ষ পয়েন্টার কাঁটা (উপর থেকে নিচে নির্দেশ করে) -->
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+            <div class="w-6 h-8 bg-[#0F172A] shadow-md border-2 border-white" style="clip-path: polygon(50% 100%, 0 0, 100% 0);"></div>
+          </div>
+
+          <!-- এমারেল্ড সেন্টার হাব -->
+          <div class="absolute w-12 h-12 rounded-full bg-gradient-to-tr from-brandGreen to-brandMint border-4 border-white shadow-md flex items-center justify-center text-lg z-10 pointer-events-none text-white">
+            <i class="fa-solid fa-gift text-sm"></i>
+          </div>
+        </div>
+
+        <!-- স্পিন অ্যাকশন বাটন -->
+        <button id="btn-spin-action" onclick="executeLuckySpin()" class="w-full h-14 bg-gradient-to-r from-emerald-600 via-brandGreen to-teal-500 hover:brightness-105 text-white font-black text-base tracking-wider rounded-2xl shadow-btn-emerald flex items-center justify-center gap-2.5 btn-press border border-white/20">
+          <i class="fa-solid fa-play"></i>
+          <span>SPIN NOW 🎯</span>
+        </button>
+
+      </div>
+
+      <!-- নিয়মাবলী কার্ড -->
+      <div class="bg-white rounded-3xl p-5 shadow-card border border-emerald-100 space-y-2.5">
+        <h3 class="text-sm font-black text-[#0F172A] flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-brandGreen text-base"></i>
+          <span>স্পিন খেলার নিয়মাবলী</span>
+        </h3>
+        <ul class="text-xs text-gray-600 font-medium space-y-2 leading-relaxed pl-1">
+          <li class="flex items-start gap-2">
+            <i class="fa-solid fa-check text-brandGreen mt-0.5"></i>
+            <span>প্রতিদিন আপনি বিনামূল্যে মোট ৫টি লাকি স্পিন সুযোগ পাবেন।</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fa-solid fa-check text-brandGreen mt-0.5"></i>
+            <span>স্পিন থামার সাথে সাথে জিতে নেওয়া টাকা সরাসরি মূল ব্যালেন্সে যোগ হবে।</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fa-solid fa-check text-brandGreen mt-0.5"></i>
+            <span>ব্যালেন্স ৬০০ টাকা হলেই আপনি বিকাশ বা নগদের মাধ্যমে উইথড্র করতে পারবেন।</span>
+          </li>
+        </ul>
+      </div>
+
+    </main>
+
+    <!-- ৩. লাইভ উইথড্রয়াল নোটিফিকেশন পপআপ -->
+    <div 
+      id="live-withdrawal-ticker" 
+      class="fixed bottom-24 left-3.5 z-40 max-w-[295px] bg-white border border-emerald-100 rounded-2xl p-3 shadow-popup flex items-start gap-3 live-popup-transition -translate-x-[135%] opacity-0 pointer-events-none"
+    >
+      <div class="w-11 h-11 rounded-full bg-emerald-50 border-2 border-emerald-300 overflow-hidden flex-shrink-0 p-0.5">
+        <img id="ticker-avatar" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="w-full h-full object-cover rounded-full">
+      </div>
+      <div class="min-w-0 flex-1 leading-snug">
+        <div class="flex items-center justify-between">
+          <h5 class="text-sm font-black text-gray-900 truncate" id="ticker-user">আরিফুল ইসলাম</h5>
+          <button onclick="dismissWithdrawalTicker()" class="text-gray-400 hover:text-gray-700 ml-1">
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        </div>
+        <p class="text-xs text-gray-700 truncate font-semibold">
+          সফলভাবে <strong class="text-brandGreen font-black font-mono" id="ticker-amount">৳1500</strong> উত্তোলন করেছেন।
+        </p>
+        <div class="text-[11px] font-bold text-gray-500 truncate" id="ticker-method">
+          <span class="text-brandGreen font-black">বিকাশ</span> • 017****5821
+        </div>
+        <span class="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="ticker-time">মাত্র সফল হয়েছে</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- ৪. ফ্লোটিং হেডফোন সাপোর্ট বাটন -->
+    <div onclick="openSupportAction()" class="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-brandGreen text-white flex items-center justify-center shadow-btn-emerald cursor-pointer btn-press border-2 border-white">
+      <i class="fa-solid fa-headset text-2xl"></i>
+    </div>
+
+    <!-- ==============================================================
+         ৫. আল্ট্রা-পারফেক্ট নচ-কার্ভড বটম নেভিগেশন বার
+    ================================================================== -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] h-[68px] z-50 flex items-stretch">
+      
+      <!-- বামপাশ (Tasks ও Team) -->
+      <div class="flex-1 bg-brandGreen flex items-center justify-around pl-2 border-t border-emerald-400/40">
+        <a href="tasks.html" class="flex flex-col items-center justify-center text-white/80 hover:text-white btn-press w-14">
+          <i class="fa-solid fa-briefcase text-lg"></i>
+          <span class="text-[10px] font-black mt-1 tracking-wider uppercase">TASKS</span>
+        </a>
+        <a href="team.html" class="flex flex-col items-center justify-center text-white/80 hover:text-white btn-press w-14">
+          <i class="fa-solid fa-users text-lg"></i>
+          <span class="text-[10px] font-black mt-1 tracking-wider uppercase">TEAM</span>
+        </a>
+      </div>
+
+      <!-- সেন্টার নচ ব্লক (অবতল খাঁজ ও খাঁটি সাদা হোম বাটন) -->
+      <div class="relative w-[88px] h-full flex flex-col items-center justify-end flex-shrink-0">
+        <svg class="absolute top-0 left-0 w-full h-full pointer-events-none" viewBox="0 0 88 68" fill="none">
+          <path d="M 0 0 C 16 0 16 36 44 36 C 72 36 72 0 88 0 L 88 68 L 0 68 Z" fill="#059669"/>
+          <path d="M 0 0 C 16 0 16 36 44 36 C 72 36 72 0 88 0" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none"/>
+        </svg>
+
+        <a href="index.html" class="absolute -top-5 w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-home-btn border-4 border-white btn-press z-10">
+          <i class="fa-solid fa-house text-2xl text-brandGreen"></i>
+        </a>
+        
+        <span class="relative z-10 text-[10px] font-black text-white mb-2 tracking-wider uppercase">HOME</span>
+      </div>
+
+      <!-- ডানপাশ (Withdraw ও Account) -->
+      <div class="flex-1 bg-brandGreen flex items-center justify-around pr-2 border-t border-emerald-400/40">
+        <a href="withdraw.html" class="flex flex-col items-center justify-center text-white/80 hover:text-white btn-press w-14">
+          <i class="fa-solid fa-wallet text-lg"></i>
+          <span class="text-[10px] font-black mt-1 tracking-wider uppercase">WITHDRAW</span>
+        </a>
+        <a href="account.html" class="flex flex-col items-center justify-center text-white/80 hover:text-white btn-press w-14">
+          <i class="fa-solid fa-gear text-lg"></i>
+          <span class="text-[10px] font-black mt-1 tracking-wider uppercase">ACCOUNT</span>
+        </a>
+      </div>
+
+    </nav>
+
+  </div>
+
+  <!-- ==============================================================
+       ৬. সম্পূর্ণ ১০টি আলাদা অপশনসহ ড্রয়ার সাইডবার
+  ================================================================== -->
+  <div id="drawer-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] hidden transition-opacity" onclick="closeDrawerMenu()">
+    <div id="drawer-panel" class="w-[315px] sm:w-[330px] h-full bg-[#FAFAF9] shadow-2xl p-4 flex flex-col justify-between overflow-y-auto transform -translate-x-full transition-transform duration-300" onclick="event.stopPropagation()">
+      
+      <div class="space-y-3 pb-6">
+        
+        <!-- প্রোফাইল হেডার কার্ড -->
+        <div class="w-full bg-[#ECFDF5] border border-emerald-200 rounded-[26px] p-5 text-center shadow-sm block">
+          <div class="w-20 h-20 rounded-full border-4 border-brandGreen mx-auto overflow-hidden bg-white shadow-sm p-0.5">
+            <img id="drawer-avatar" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User" class="w-full h-full object-cover rounded-full">
+          </div>
+          <h3 class="text-lg font-black text-gray-900 mt-2.5" id="drawer-user-name">ইউজার</h3>
+          <span class="inline-block bg-[#0F172A] text-brandMint text-xs font-black px-4 py-1 rounded-full font-mono mt-1.5" id="drawer-user-id">UID: ---</span>
+        </div>
+
+        <!-- ১০টি ফুল-উইথ মেনু কার্ড -->
+        <div class="flex flex-col space-y-2.5 w-full">
+          
+          <a href="index.html" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98]">
+            <div class="w-11 h-11 rounded-[14px] bg-[#059669] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-house"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">Home</span>
+          </a>
+
+          <a href="tasks.html" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98]">
+            <div class="w-11 h-11 rounded-[14px] bg-[#10B981] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-list-ul"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">Today Task</span>
+          </a>
+
+          <button onclick="openHistoryModal(); closeDrawerMenu();" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98] text-left">
+            <div class="w-11 h-11 rounded-[14px] bg-[#047857] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">Income History</span>
+          </button>
+
+          <button onclick="showToast('শীঘ্রই লিডারবোর্ড সক্রিয় হবে!', 'fa-trophy'); closeDrawerMenu();" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98] text-left">
+            <div class="w-11 h-11 rounded-[14px] bg-[#D97706] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">Leaderboard</span>
+          </button>
+
+          <button onclick="showToast('কোনো পেন্ডিং কাজ পর্যালোচনায় নেই', 'fa-hourglass-half'); closeDrawerMenu();" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98] text-left">
+            <div class="w-11 h-11 rounded-[14px] bg-[#6D28D9] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">Pending Status</span>
+          </button>
+
+          <!-- Spin & Earn (সক্রিয় মেনু) -->
+          <a href="spin.html" class="w-full bg-emerald-50 border border-emerald-200 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 transition active:scale-[0.98]">
+            <div class="w-11 h-11 rounded-[14px] bg-brandGreen text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-dharmachakra"></i>
+            </div>
+            <span class="text-[15px] font-black text-brandGreen">Spin & Earn</span>
+          </a>
+
+          <button onclick="showToast('আর্নিং গেমস শীঘ্রই চালু হচ্ছে!', 'fa-gamepad'); closeDrawerMenu();" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98] text-left">
+            <div class="w-11 h-11 rounded-[14px] bg-[#4F46E5] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-gamepad"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">Earn Games</span>
+          </button>
+
+          <a href="team.html" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98]">
+            <div class="w-11 h-11 rounded-[14px] bg-[#0284C7] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">My Team</span>
+          </a>
+
+          <button onclick="openSupportAction(); closeDrawerMenu();" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98] text-left">
+            <div class="w-11 h-11 rounded-[14px] bg-[#0088CC] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-headset"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">Support Group</span>
+          </button>
+
+          <a href="withdraw.html" class="w-full bg-white border border-gray-100 shadow-drawer rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:shadow-md transition active:scale-[0.98]">
+            <div class="w-11 h-11 rounded-[14px] bg-[#059669] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <span class="text-[15px] font-bold text-gray-800">Withdraw</span>
+          </a>
+
+          <button onclick="safeLogout()" class="w-full bg-[#FFECEC] border border-red-100 rounded-[18px] p-2.5 px-3 flex items-center gap-3.5 hover:bg-red-100 transition active:scale-[0.98] text-left">
+            <div class="w-11 h-11 rounded-[14px] bg-[#E53935] text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </div>
+            <span class="text-[15px] font-black text-[#D32F2F]">Logout</span>
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ৭. ইনকাম হিস্ট্রি মডাল -->
+  <div id="modal-history" class="fixed inset-0 bg-black/75 backdrop-blur-md z-[250] hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-[360px] rounded-3xl p-5 space-y-3.5 shadow-2xl max-h-[85vh] overflow-y-auto border border-gray-100">
+      <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+        <h3 class="text-sm font-black text-brandGreen flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left"></i> ইনকাম হিস্ট্রি
+        </h3>
+        <button onclick="closeHistoryModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+      <div id="history-items-container" class="space-y-2 text-xs">
+        <div class="bg-gray-50 border border-gray-100 rounded-2xl p-3.5 flex items-center justify-between shadow-xs">
+          <div>
+            <span class="font-bold text-gray-900 text-sm block">ওয়েলকাম বোনাস</span>
+            <span class="text-xs text-gray-400">একাউন্ট রেজিস্ট্রেশন</span>
+          </div>
+          <span class="font-mono font-black text-brandGreen text-base">+৳ 25.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ৮. গ্লোবাল টোস্ট নোটিফিকেশন -->
+  <div id="app-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[300] transition-all duration-300 pointer-events-none opacity-0 -translate-y-8">
+    <div class="px-5 py-2.5 rounded-full bg-[#0F172A] text-white shadow-2xl flex items-center gap-2.5 text-xs whitespace-nowrap border border-emerald-500/30">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-brandMint"></i>
+      <span id="toast-msg" class="font-bold">সফল হয়েছে</span>
+    </div>
+  </div>
+
+  <!-- ==============================================================
+       ৯. ব্যাকএন্ড, ফায়ারবেস অথেন্টিকেশন গার্ড ও লাকি স্পিন ইঞ্জিন
+  ================================================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getFirestore, doc, updateDoc, onSnapshot, increment, query, collection, where, limit 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // ফায়ারবেস কনফিগারেশন
+    const firebaseConfig = {
+      apiKey: "AIzaSyC5OCoerKEM5rkq28026Unzb9FmyAD9pg4",
+      authDomain: "vote-b35d7.firebaseapp.com",
+      projectId: "vote-b35d7",
+      storageBucket: "vote-b35d7.firebasestorage.app",
+      messagingSenderId: "904040944850",
+      appId: "1:904040944850:web:11523bc12c18dff2c0890b",
+      measurementId: "G-8EP040DZ01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = {
+      uid: "",
+      name: "ইউজার",
+      balance: 0.00,
+      earnings: 0.00,
+      remainingSpins: 5
+    };
+
+    let adminConfig = {
+      telegramSupportUrl: "https://t.me"
+    };
+
+    // ৬টি আকর্ষণীয় পুরস্কার স্লট (এমারেল্ড, মিন্ট ও রয়্যাল ব্ল্যাক প্যালেট)
+    const wheelPrizes = [
+      { text: "৳৫", val: 5, color: "#059669" },
+      { text: "৳১০", val: 10, color: "#0D9488" },
+      { text: "৳২", val: 2, color: "#10B981" },
+      { text: "৳৫০", val: 50, color: "#0F172A" },
+      { text: "৳২০", val: 20, color: "#047857" },
+      { text: "৳১৫", val: 15, color: "#F59E0B" }
+    ];
+
+    // ==============================================================
+    // ১. তাৎক্ষণিক লোকাল ক্যাশ লোড (০ মিলিসেকেন্ডে UI প্রস্তুত)
+    // ==============================================================
+    const cachedData = localStorage.getItem("bdincome_user");
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        currentUser = { ...currentUser, ...parsed };
+        if (parsed.remainingSpins !== undefined) currentUser.remainingSpins = parsed.remainingSpins;
+        updateUserUI();
+      } catch (e) {}
+    }
+
+    // ক্যানভাসে চাকা সাথে সাথে এঁকে দেওয়া
+    renderWheel();
+
+    // ==============================================================
+    // ২. সাইলেন্ট ব্যাকগ্রাউন্ড অথেন্টিকেশন গার্ড
+    // ==============================================================
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        localStorage.removeItem("bdincome_user");
+        window.location.replace("auth.html");
+      } else {
+        currentUser.uid = user.uid;
+        if (!currentUser.name || currentUser.name === "ইউজার") {
+          currentUser.name = user.displayName || "ইউজার";
+          updateUserUI();
+        }
+
+        listenToCurrentUserData(user.uid);
+        listenToServerWithdrawals();
+      }
+    });
+
+    // ফায়ারস্টোর সাইলেন্ট রিয়েলটাইম সিঙ্ক
+    function listenToCurrentUserData(uid) {
+      try {
+        const userRef = doc(db, "users", uid);
+        onSnapshot(userRef, (snap) => {
+          if (snap.exists()) {
+            const d = snap.data();
+            currentUser.name = d.name || currentUser.name;
+            currentUser.balance = Number(d.balance !== undefined ? d.balance : 0);
+            currentUser.earnings = Number(d.earnings !== undefined ? d.earnings : 0);
+            if (d.remainingSpins !== undefined) currentUser.remainingSpins = Number(d.remainingSpins);
+
+            localStorage.setItem("bdincome_user", JSON.stringify(currentUser));
+            updateUserUI();
+          }
+        });
+      } catch (e) {
+        console.error("Firestore sync error:", e);
+      }
+    }
+
+    function updateUserUI() {
+      const nameEl = document.getElementById('header-user-name');
+      const drawerNameEl = document.getElementById('drawer-user-name');
+      const drawerUidEl = document.getElementById('drawer-user-id');
+      const balanceEl = document.getElementById('spin-balance-display');
+      const spinsEl = document.getElementById('remaining-spins-display');
+
+      if (nameEl) nameEl.innerText = currentUser.name || "ইউজার";
+      if (drawerNameEl) drawerNameEl.innerText = currentUser.name || "ইউজার";
+      if (drawerUidEl) drawerUidEl.innerText = `UID: ${currentUser.uid ? currentUser.uid.slice(0, 8) : '---'}`;
+      if (balanceEl) balanceEl.innerText = `৳ ${currentUser.balance.toFixed(2)}`;
+      if (spinsEl) spinsEl.innerText = `${currentUser.remainingSpins} বার`;
+    }
+
+    // ক্যানভাসে চাকা আঁকা
+    function renderWheel() {
+      const canvas = document.getElementById('spinCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const num = wheelPrizes.length;
+      const angle = (2 * Math.PI) / num;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      wheelPrizes.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.moveTo(130, 130);
+        ctx.arc(130, 130, 126, i * angle, (i + 1) * angle);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(130, 130);
+        ctx.rotate(i * angle + angle / 2);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 15px 'Plus Jakarta Sans', sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(p.text, 106, 5);
+        ctx.restore();
+      });
+    }
+
+    // লাকি স্পিন এক্সিকিউশন
+    let isSpinning = false;
+    let totalRotations = 0;
+
+    window.executeLuckySpin = function() {
+      if (isSpinning) return;
+
+      if (currentUser.remainingSpins <= 0) {
+        showToast('আজকের সব স্পিন শেষ! আগামীকাল আবার আসুন।', 'fa-circle-exclamation');
+        return;
+      }
+
+      isSpinning = true;
+      const canvas = document.getElementById('spinCanvas');
+      const btn = document.getElementById('btn-spin-action');
+      btn.disabled = true;
+
+      // বিজয়ী স্লট নির্বাচন
+      const winIdx = Math.floor(Math.random() * wheelPrizes.length);
+      const chosen = wheelPrizes[winIdx];
+
+      const numSlices = wheelPrizes.length;
+      const sliceDeg = 360 / numSlices;
+      const sliceCenterDeg = winIdx * sliceDeg + sliceDeg / 2;
+
+      // কাঁটাটি শীর্ষে (২৭০ ডিগ্রিতে) অবস্থিত, তাই নিখুঁতভাবে থামাতে টার্গেট ডিগ্রি হিসাব
+      const stopAtTopDeg = ((270 - sliceCenterDeg + 360) % 360);
+      totalRotations += 360 * 6 + stopAtTopDeg;
+
+      canvas.style.transform = `rotate(${totalRotations}deg)`;
+
+      setTimeout(async () => {
+        // ১. লোকাল ক্যাশ সাথে সাথে আপডেট
+        currentUser.balance += chosen.val;
+        currentUser.earnings += chosen.val;
+        currentUser.remainingSpins = Math.max(0, currentUser.remainingSpins - 1);
+
+        localStorage.setItem("bdincome_user", JSON.stringify(currentUser));
+        updateUserUI();
+
+        confetti({ particleCount: 65, spread: 75, origin: { y: 0.7 } });
+        showToast(`অভিনন্দন! আপনি স্পিনে ${chosen.text} টাকা জিতেছেন! 🎉`, 'fa-circle-check');
+
+        // ২. সাইলেন্টলি ব্যাকগ্রাউন্ডে ফায়ারবেস আপডেট
+        if (currentUser.uid) {
+          try {
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, {
+              balance: increment(chosen.val),
+              earnings: increment(chosen.val),
+              remainingSpins: increment(-1)
+            });
+          } catch (e) {
+            console.error("Spin server update error:", e);
+          }
+        }
+
+        btn.disabled = false;
+        isSpinning = false;
+      }, 4600);
+    };
+
+    // লাইভ উইথড্রয়াল নোটিফিকেশন ইঞ্জিন
+    let serverWithdrawals = [];
+    async function listenToServerWithdrawals() {
+      try {
+        const q = query(collection(db, "withdrawals"), where("status", "==", "approved"), limit(10));
+        onSnapshot(q, (snap) => {
+          serverWithdrawals = [];
+          snap.forEach(d => serverWithdrawals.push(d.data()));
+        });
+      } catch (e) {}
+    }
+
+    const banglaFirstNames = ["আরিফুল", "রোকসানা", "তাসনিম", "মেহেদী", "সুমন", "ফারহানা", "শাকিল", "নাজমুল", "তানজিলা", "সুমাইয়া", "রাব্বি", "রিফাত"];
+    const banglaLastNames = ["ইসলাম", "পারভীন", "আহমেদ", "হাসান", "আক্তার", "খান", "হোসেন", "রহমান", "মিয়া"];
+    const operatorCodes = ["017", "018", "019", "016", "013"];
+    const realisticAmounts = [600, 1000, 1200, 1500, 1800, 2000, 2450, 2670, 3000];
+
+    let tickerHideTimer = null;
+    let tickerTimer = null;
+
+    function showNextWithdrawalNotification() {
+      const ticker = document.getElementById('live-withdrawal-ticker');
+      if (!ticker) return;
+
+      let name, amount, method, phone;
+
+      if (serverWithdrawals.length > 0 && Math.random() > 0.45) {
+        const item = serverWithdrawals[Math.floor(Math.random() * serverWithdrawals.length)];
+        name = item.userName || "ইউজার";
+        amount = item.amount || 1200;
+        method = item.method || "বিকাশ";
+        phone = item.accountNumber ? `${item.accountNumber.slice(0, 3)}****${item.accountNumber.slice(-4)}` : "017****5821";
+      } else {
+        const f = banglaFirstNames[Math.floor(Math.random() * banglaFirstNames.length)];
+        const l = banglaLastNames[Math.floor(Math.random() * banglaLastNames.length)];
+        const op = operatorCodes[Math.floor(Math.random() * operatorCodes.length)];
+        name = `${f} ${l}`;
+        amount = realisticAmounts[Math.floor(Math.random() * realisticAmounts.length)];
+        method = Math.random() > 0.4 ? "নগদ" : "বিকাশ";
+        phone = `${op}****${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
+      document.getElementById('ticker-user').innerText = name;
+      document.getElementById('ticker-amount').innerText = `৳${amount}`;
+      document.getElementById('ticker-method').innerHTML = `<span class="text-brandGreen font-black">${method}</span> • ${phone}`;
+
+      ticker.classList.remove('-translate-x-[135%]', 'opacity-0', 'pointer-events-none');
+      ticker.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
+
+      clearTimeout(tickerHideTimer);
+      tickerHideTimer = setTimeout(hideWithdrawalTicker, 4500);
+    }
+
+    function hideWithdrawalTicker() {
+      const ticker = document.getElementById('live-withdrawal-ticker');
+      if (!ticker) return;
+
+      ticker.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+      ticker.classList.add('-translate-x-[135%]', 'opacity-0', 'pointer-events-none');
+
+      clearTimeout(tickerTimer);
+      tickerTimer = setTimeout(showNextWithdrawalNotification, Math.floor(Math.random() * 3000) + 6500);
+    }
+
+    window.dismissWithdrawalTicker = function() {
+      clearTimeout(tickerHideTimer);
+      hideWithdrawalTicker();
+    };
+
+    setTimeout(showNextWithdrawalNotification, 2000);
+
+    // অ্যাকশন হ্যান্ডলারসমূহ
+    window.openSupportAction = function() {
+      if (adminConfig.telegramSupportUrl) window.open(adminConfig.telegramSupportUrl, "_blank");
+    };
+
+    window.openDrawerMenu = function() {
+      const overlay = document.getElementById('drawer-overlay');
+      const panel = document.getElementById('drawer-panel');
+      overlay.classList.remove('hidden');
+      setTimeout(() => panel.classList.remove('-translate-x-full'), 10);
+    };
+
+    window.closeDrawerMenu = function() {
+      const panel = document.getElementById('drawer-panel');
+      panel.classList.add('-translate-x-full');
+      setTimeout(() => document.getElementById('drawer-overlay').classList.add('hidden'), 250);
+    };
+
+    window.openHistoryModal = function() {
+      document.getElementById('modal-history').classList.remove('hidden');
+    };
+
+    window.closeHistoryModal = function() {
+      document.getElementById('modal-history').classList.add('hidden');
+    };
+
+    window.safeLogout = async function() {
+      if (confirm("আপনি কি নিশ্চিত লগআউট করতে চান?")) {
+        try {
+          await signOut(auth);
+          localStorage.removeItem("bdincome_user");
+          window.location.replace("auth.html");
+        } catch (e) {
+          showToast('লগআউটে সমস্যা হয়েছে', 'fa-triangle-exclamation');
+        }
+      }
+    };
+
+    let toastTimer = null;
+    window.showToast = function(msg, icon = 'fa-circle-check') {
+      const toast = document.getElementById('app-toast');
+      const msgEl = document.getElementById('toast-msg');
+      const iconEl = document.getElementById('toast-icon');
+      if (!toast) return;
+
+      msgEl.innerText = msg;
+      iconEl.className = `fa-solid ${icon} text-brandMint`;
+
+      clearTimeout(toastTimer);
+      toast.classList.remove('opacity-0', '-translate-y-8');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-8');
+      }, 2300);
+    };
+  </script>
+
+</body>
+</html>
